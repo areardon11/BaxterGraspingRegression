@@ -1,0 +1,2 @@
+final:lab3
+-DCATKIN_DEVEL_PREFIX=/home/group7/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/group7/ros_ws/install -G Unix Makefiles

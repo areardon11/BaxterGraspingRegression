@@ -1,0 +1,12 @@
+/home/group7/ros_ws/build/lab3/CMakeFiles/_catkin_empty_exported_target.dir
+/home/group7/ros_ws/build/CMakeFiles/clean_test_results.dir
+/home/group7/ros_ws/build/CMakeFiles/clean_test_results_Project.dir
+/home/group7/ros_ws/build/CMakeFiles/download_extra_data.dir
+/home/group7/ros_ws/build/CMakeFiles/doxygen.dir
+/home/group7/ros_ws/build/gtest/CMakeFiles/gtest.dir
+/home/group7/ros_ws/build/gtest/CMakeFiles/gtest_main.dir
+/home/group7/ros_ws/build/CMakeFiles/run_tests.dir
+/home/group7/ros_ws/build/final/CMakeFiles/std_msgs_generate_messages_cpp.dir
+/home/group7/ros_ws/build/final/CMakeFiles/std_msgs_generate_messages_lisp.dir
+/home/group7/ros_ws/build/final/CMakeFiles/std_msgs_generate_messages_py.dir
+/home/group7/ros_ws/build/CMakeFiles/tests.dir

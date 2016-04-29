@@ -1,0 +1,8 @@
+prefix=/home/group7/ros_ws/install
+
+Name: lab3
+Description: Description of lab3
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/group7/ros_ws/install/lib 
+Requires: 

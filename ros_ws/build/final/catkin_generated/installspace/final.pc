@@ -1,0 +1,8 @@
+prefix=/home/group7/ros_ws/install
+
+Name: final
+Description: Description of final
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/group7/ros_ws/install/lib 
+Requires: 

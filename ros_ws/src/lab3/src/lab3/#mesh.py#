@@ -1,0 +1,40 @@
+'''
+Encapsulates mesh for grasping operations
+Author: Jeff Mahler
+'''
+import copy
+import logging
+import numpy as np
+import os
+import sys
+
+class Mesh3D(object):
+    """
+    A Mesh is a three-dimensional shape representation
+    
+    Params:
+       vertices:  (list of 3-lists of float)
+       triangles: (list of 3-lists of ints)
+       normals:   (list of 3-lists of float)
+       metadata:  (dictionary) data like category, etc
+       pose:      (tfx pose)
+       scale:     (float)
+       component: (int)
+    """
+    def __init__(self, vertices, triangles, normalso):
+        self.vertices_ = vertices
+        self.triangles_ = triangles
+        self.normals_ = normals
+
+    @property
+    def vertices(self):
+        return self.vertices_
+
+    @property
+    def triangles(self):
+        return self.triangles_
+
+    @property
+    def normals(self):
+        return self.normals_
+
