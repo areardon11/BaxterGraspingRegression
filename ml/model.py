@@ -7,9 +7,10 @@ from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.cross_validation import train_test_split
 from IPython import embed
 
-def load(n='00', fc=True, mounted=False):
+def load(n='00', force_closure=True, mounted=False):
     """
     Loads data from given file index `n`
     """
@@ -20,7 +21,7 @@ def load(n='00', fc=True, mounted=False):
     w1 = np.load(prepend+'w1_projection_window_' + n + '.npz')['arr_0']
     w2 = np.load(prepend+'w2_projection_window_' + n + '.npz')['arr_0']
     moments = np.load(prepend+'moment_arms_' + n + '.npz')['arr_0']
-    if fc:
+    if force_closure:
         fc = np.load(prepend+'force_closure_' + n + '.npz')['arr_0']
     else:
         fc = np.load(prepend+'ferrari_canny_L1_' + n + '.npz')['arr_0']
@@ -41,7 +42,7 @@ def split(data, labels):
     test_data, test_labels = data[test_idx,:], labels[test_idx]
     return train_data, train_labels, test_data, test_labels
 
-def sampler(names, count, fc=False, mounted=False):
+def sampler(names, count, force_closure=True, mounted=False):
     """
     Samples `count` number of data points from
     a list of files given by `names`
@@ -51,8 +52,8 @@ def sampler(names, count, fc=False, mounted=False):
     sample_labels = []
     for name in names:
         print("Opening file: " + name)
-        data, labels = load(name, fc, mounted)
-        idx = np.random.randint(0, data.shape[0], samples_per_file)
+        data, labels = load(name, force_closure, mounted)
+        idx = np.random.choice(data.shape[0], samples_per_file, replace=False) #samples without replacement
         sample_data.append(data[idx, :])
         sample_labels.append(labels[idx])
     sample_data = np.vstack(sample_data)
@@ -135,11 +136,11 @@ if __name__ == "__main__":
     #Creates datasets to test on by sampling Jeff's data
     #Only run this when you want a fresh dataset
     names = ["0" + str(i) for i in range(10)]
-    names += [str(i) for i in range(10,100)]
-    data, labels = sampler(names, 200000, fc=True, mounted=True)
-    np.savez('training', data=data, labels=labels)
-    data, labels = sampler(names, 100000, fc=True, mounted=True)
-    np.savez('test', data=data, labels=labels)
+    names += [str(i) for i in range(10,105)]
+    data, labels = sampler(names, 300000, force_closure=True, mounted=True)
+    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.33)
+    np.savez('training', data=X_train, labels=y_train)
+    np.savez('test', data=X_test, labels=y_test)
 
     #Loads the dataset
     data = np.load('training.npz')
