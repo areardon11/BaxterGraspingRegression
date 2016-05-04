@@ -9,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cross_validation import train_test_split
 from IPython import embed
+import neural_netA as nna
 
 def load(n='00', force_closure=True, mounted=False):
     """
@@ -113,6 +114,34 @@ def grow_forest(pd, pl, qd, ql, classifier=True, trees=10):
     print(rf.score(qd, ql))
     return rf
 
+#assumes a classifier neural net
+def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hid=200):
+
+    #featurizes the data in the proper format for the neural net
+    def convert_to_feature_label(y_val):
+        return np.bincount(np.array([y_val]), minlength=2)
+
+    pdf = np.column_stack((pd,np.ones(pd.shape[0])))
+    qdf = np.column_stack((qd,np.ones(qd.shape[0])))
+    plf = np.zeros((pl.shape[0], 2))
+    for x in range(pl.shape[0]):
+        plf[x] = convert_to_feature_label(pl[x])
+
+    #prepares the neural net
+    neural_net = neural_net_model.Neural_Network(n_hidden=n_hid)
+    if use_weights == None:
+        print "Growing Neural Net!"
+        neural_net.train(pdf, plf, neural_net.crossEntopyError, neural_net.crossEntropyPrime)
+    else:
+        neural_net.load_weights(arg_list=use_weights)
+
+    print "Testing Neural Net!"
+    preds = neural_net.predict(qdf)
+    error_rate, indices = nna.benchmark(preds, ql)
+    print "Test accuracy = ", 1-error_rate
+    return neural_net
+
+
     
 
 def add_noise(data, labels, num=3):
@@ -135,22 +164,24 @@ if __name__ == "__main__":
 
     #Creates datasets to test on by sampling Jeff's data
     #Only run this when you want a fresh dataset
-    names = ["0" + str(i) for i in range(10)]
-    names += [str(i) for i in range(10,105)]
-    data, labels = sampler(names, 300000, force_closure=True, mounted=True)
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.33)
-    np.savez('training', data=X_train, labels=y_train)
-    np.savez('test', data=X_test, labels=y_test)
+
+    # names = ["0" + str(i) for i in range(10)]
+    # names += [str(i) for i in range(10,105)]
+    # data, labels = sampler(names, 300000, force_closure=True, mounted=True)
+    # X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.33)
+    # np.savez('training', data=X_train, labels=y_train)
+    # np.savez('test', data=X_test, labels=y_test)
 
     #Loads the dataset
     data = np.load('training.npz')
     pd, pl = data['data'], data['labels']
     data = np.load('test.npz')
     qd, ql = data['data'], data['labels']
-    pd, pl = add_noise(pd, pl, 3)
+    # pd, pl = add_noise(pd, pl, 3)
 
     #Examples on how to create a new model
     #svm = create_svm(pd, pl, qd, ql)
     #dt = grow_tree(pd, pl, qd, ql)
-    rf = grow_forest(pd, pl, qd, ql)
+    #rf = grow_forest(pd, pl, qd, ql)
+    nn = grow_neural_net(pd, pl, qd, ql)
          
