@@ -8,7 +8,7 @@ import roslaunch
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 
-name = 'kinect1'
+name = 'kinect2'
 MARKER_SIZE = "13.35"
 MAX_NEW_MARKER_ERROR = "0.08"
 MAX_TRACK_ERROR = "0.2"
@@ -20,7 +20,7 @@ MNAME = name
 
 
 if __name__ == '__main__':
-    rospy.init_node('kinect1_location_broadcaster')
+    rospy.init_node('kinect2_location_broadcaster')
     
     listener = tf.TransformListener()
     count = 0
@@ -37,9 +37,10 @@ if __name__ == '__main__':
     launch.start()
 
     process = launch.launch(node)
+
     while True:
         try:
-            t,r = listener.lookupTransform('ar_marker_1', 'kinect1_link', rospy.Time(0))
+            t,r = listener.lookupTransform('ar_marker_1', 'kinect2_link', rospy.Time(0))
             if t is not None and r is not None:
                 t_list.append(np.array(t))
                 r_list.append(np.array(r))
@@ -52,8 +53,8 @@ if __name__ == '__main__':
     avg_t = tuple(sum(t_list) / float(len(t_list)))
     avg_r = tuple(sum(r_list) / float(len(r_list)))
 
-    print 'The translation from Kinect 1 to AR Marker 1 is: ' + str(avg_t)
-    print 'The rotation from Kinect 1 to AR Marker 1 is: ' + str(avg_r) 
+    print 'The translation from Kinect 2to AR Marker 1 is: ' + str(avg_t)
+    print 'The rotation from Kinect 2 to AR Marker 1 is: ' + str(avg_r) 
     process.stop()
 
     broadcaster = tf.TransformBroadcaster()
@@ -63,6 +64,6 @@ if __name__ == '__main__':
         broadcaster.sendTransform(avg_t, 
                                   avg_r, 
                                   rospy.Time.now(), 
-                                  '/kinect1_link', 
+                                  '/kinect2_link', 
                                   '/ar_marker_1')
         rate.sleep()    

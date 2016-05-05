@@ -5,20 +5,22 @@
         <arg name="depth_frame_id" value="/kinect1_depth_frame" />
         <arg name="camera" value="kinect1" />
         <arg name="device_id" value="#1" />
+        <arg name="depth_registration" value="true" />
     </include>
 
     <!-- <param name='use_sim_time' type='bool' value='true'/> -->
         
-    <arg name="marker_size" default="6.35" />
+    <arg name="marker_size" default="13.35" />
     <arg name="max_new_marker_error" default="0.08" />
     <arg name="max_track_error" default="0.2" />
     <arg name="cam_image_topic" default="/kinect1/rgb/image_color" />
     <arg name="cam_info_topic" default="/kinect1/rgb/camera_info" />
     <arg name="output_frame" default="/kinect1_link" />
     <arg name="mname" default="kinect1" />
+
     
      
-    <node name="ar_track_alvar_kinect1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
+    <!--<node name="ar_track_alvar_kinect1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />-->
 
     <node name="kinect1_location_publisher" pkg="final" type="broadcast_kinect1.py" respawn="false" output="screen" /> 
 

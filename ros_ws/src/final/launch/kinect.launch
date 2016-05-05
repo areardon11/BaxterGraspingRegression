@@ -1,21 +1,4 @@
 <launch>
-    
-    <include file="$(find freenect_launch)/launch/freenect.launch">
-        <arg name="rgb_frame_id" default="/kinect1_rgb_frame" />
-        <arg name="depth_frame_id" default="/kinect1_depth_frame" />
-        <arg name="camera" default="kinect1" />
-    </include>
-        
-    <arg name="marker_size" default="6.35" />
-    <arg name="max_new_marker_error" default="0.08" />
-    <arg name="max_track_error" default="0.2" />
-    <arg name="cam_image_topic" default="/kinect1/rgb/image_color" />
-    <arg name="cam_info_topic" default="/kinect1/rgb/camera_info" />
-    <arg name="output_frame" default="/kinect1_link" />
-    <arg name="mname" default="kinect1" />
-    
-     
-    <node name="ar_track_alvar_kinect1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
-
-    <node name="kinect1_location_publisher" pkg="final" type="broadcast_kinect1.py" respawn="false" output="screen" /> 
+    <include file="$(find final)/launch/kinect1.launch"/>
+    <include file="$(find final)/launch/kinect2.launch"/>
 </launch>

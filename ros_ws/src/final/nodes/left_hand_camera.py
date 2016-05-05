@@ -31,15 +31,3 @@ if __name__ == '__main__':
     print 'The translation from Base to AR Marker 1 is: ' + str(avg_t)
     print 'The rotation from Base to AR Marker 1 is: ' + str(avg_r) 
 
-    broadcaster = tf.TransformBroadcaster()
-    rate = rospy.Rate(1.0)
-
-    system('rosnode kill ar_track_alvar_left_hand')
-
-    while not rospy.is_shutdown():
-        broadcaster.sendTransform(avg_t, 
-                                  avg_r, 
-                                  rospy.Time.now(), 
-                                  '/ar_marker_1', 
-                                  '/base')
-        rate.sleep()    

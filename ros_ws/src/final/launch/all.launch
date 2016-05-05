@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find final)/launch/baxter_right_hand_track.launch"/>
+    <include file="$(find final)/launch/kinect.launch"/>
+</launch>
