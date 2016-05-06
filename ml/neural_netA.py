@@ -68,8 +68,15 @@ class Neural_Network(object):
         #Compute derivative with respect to W and W2 for a given X and y:
         #assumes X is a vector (one sample)
         if len(X.shape) > 1:
-            print "Did not account for batch or mini-batch!!!"
-            return
+            self.yHat = self.forward(X)
+        
+            delta3 = np.multiply(-(y-self.yHat), self.actFuncPrimeOut(self.z3))
+            dJdW = np.dot(delta3.T, self.a2)
+            
+            delta2 = np.dot(delta3, self.W)[:,:-1]*self.actFuncPrimeHid(self.z2)
+            dJdV = np.dot(delta2.T, X)
+            
+            return dJdV, dJdW
 
         self.yHat = self.forward(X)
         
@@ -81,12 +88,23 @@ class Neural_Network(object):
         
         return dJdV, dJdW
 
-    def crossEntopyError(self, X, y):
+    def crossEntropyError(self, X, y):
         self.yHat = self.forward(X)
         J = -np.sum(y*np.log(self.yHat)+(1-y)*np.log(1-self.yHat))
         return J
 
     def crossEntropyPrime(self, X, y):
+        if len(X.shape) > 1:
+            self.yHat = self.forward(X)
+
+            delta3 = -self.actFuncPrimeOut(self.z3)*(y/self.actFuncOut(self.z3)-(1-y)/(1-self.actFuncOut(self.z3)))
+            dJdW = np.dot(delta3.T, self.a2)
+            
+            delta2 = np.dot(delta3, self.W)[:,:-1]*self.actFuncPrimeHid(self.z2)
+            dJdV = np.dot(delta2.T, X)
+            
+            return dJdV, dJdW
+
         self.yHat = self.forward(X)
 
         delta3 = -self.actFuncPrimeOut(self.z3)*(y/self.actFuncOut(self.z3)-(1-y)/(1-self.actFuncOut(self.z3)))
@@ -97,12 +115,12 @@ class Neural_Network(object):
         
         return dJdV, dJdW
 
-    def stocahstic(self, x, y, costFuncPrime, epsilon=.01):
+    def gradient_descent(self, x, y, costFuncPrime, epsilon=.01):
         dJdV, dJdW = costFuncPrime(x, y)
         self.V = self.V - epsilon*dJdV
         self.W = self.W - epsilon*dJdW
 
-    def train(self, X, y, costFunc, costFuncPrime, epsilon=.01, convergence=.0001):
+    def train(self, X, y, costFunc, costFuncPrime, epsilon=.01, convergence=.001, batch_size=1):
         total_training_errors = []
         classification_accuracies = []
         past_w = float('inf')*np.ones_like(self.W)
@@ -110,7 +128,7 @@ class Neural_Network(object):
         counter = 0
         change_count = 0
         change_vals = float('inf')*np.ones(10)
-        stats_constant = 10000
+        stats_constant = 1000
         while np.mean(change_vals) > convergence:
             #perform statistics and bookkeeping every 1000 iterations
             if counter % stats_constant == 0 and counter != 0:
@@ -127,9 +145,9 @@ class Neural_Network(object):
             #performs the weight update w/gradient descent
             past_w = self.W
             past_v = self.V
-            i = np.random.randint(X.shape[0])
-            x = X[i]
-            self.stocahstic(x, y[i], costFuncPrime, epsilon=epsilon)
+            idx = np.random.choice(X.shape[0], batch_size, replace=False)
+            x = X[idx]
+            self.gradient_descent(x, y[idx], costFuncPrime, epsilon=epsilon)
             counter += 1
         #saves the determined weights and plots statistics
         np.save("V.npy", self.V)
@@ -147,12 +165,3 @@ def benchmark(pred_labels, true_labels):
     err_rate = sum(errors) / float(len(true_labels))
     indices = errors.nonzero()
     return err_rate, indices
-
-
-#do the training and predicting
-# neural_net = Neural_Network()
-# neural_net.train(train_features, train_label_features, neural_net.crossEntopyError, neural_net.crossEntropyPrime)
-# print neural_net.predict(train_features[20000,:])
-
-
-

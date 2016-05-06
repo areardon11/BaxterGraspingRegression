@@ -3,6 +3,29 @@ import numpy.linalg as la
 from numpy.random import normal
 from IPython import embed
 
+#takes contact pairs and featurizes them in the window and moment arm format
+def featurize(pairs_arr, pc, ma=False, w=.05, gs=15):
+    """
+    Returns a featurized array based on the pairs of points passed in using the below functions
+    'pairs_arr' is (n x 6) np array where each row contains the two contact points
+    'pc' is the point cloud as a np array (n x 3)
+    'ma' is the argument for whether you want the full moment arms in the featurization or just the magnitude
+    'w' and 'gs' are the window arguments
+    """
+    def featurize_pair(pair, full_ma):
+        p1, p2 = pair[:3], pair[3:]
+        if full_ma:
+            return np.hstack((window(p1,(p2-p1)/la.norm(p2-p1),pc,w=w,gs=gs), window(p2,(p1-p2)/la.norm(p2-p1),pc,w=w,gs=gs), moment_arm(p1,pc), moment_arm(p2,pc)))
+        return np.hstack((window(p1,(p2-p1)/la.norm(p2-p1),pc,w=w,gs=gs), window(p2,(p1-p2)/la.norm(p2-p1),pc,w=w,gs=gs), la.norm(moment_arm(p1,pc)), la.norm(moment_arm(p2,pc))))
+
+    if len(pairs_arr.shape) == 1:
+        return featurize_pair(pairs_arr, ma)
+
+    fp = []
+    for x in range(pairs_arr.shape[0]):
+        fp.append(featurize_pair(pairs_arr[x], ma))
+    return np.asarray(fp)
+
 def window(c, n, pc, w=.05, gs=15):
     """
     Generates the window, around contact `c`,
@@ -23,7 +46,7 @@ def window(c, n, pc, w=.05, gs=15):
     three_to_two = np.vstack((u,v))
     delta = w / float(gs)
     grid = np.zeros((15,15)) + .2
-    print("Delta is " + str(delta))
+    # print("Delta is " + str(delta))
     for p in pc:
         
         # Project point onto plane

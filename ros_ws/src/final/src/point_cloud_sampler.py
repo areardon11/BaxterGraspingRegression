@@ -1,6 +1,8 @@
 import numpy as np
-from featurize import window
-from featurize import moment_arm
+from featurize import featurize
+import sys
+sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+import model
 
 #set constants
 max_gripper_width = .0825
@@ -14,23 +16,13 @@ points_wanted = 7 #will only return one pair if <= 6
 def determine_grasp(point_cloud):
     possible_grasps = contact_pairs(point_cloud)
     print "possible_grasps: \n", possible_grasps
-    featurized_grasps = featurize_pairs(possible_grasps, point_cloud)
+    featurized_grasps = featurize(possible_grasps, point_cloud)
     print "featurized_grasps shapes: \n", featurized_grasps.shape
-    return featurized_grasps
+    force_closure = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V1.npy", "neural_net_weights/W1.npy"])
+    print force_closure
 
-#takes contact pairs and featurizes them in the window and moment arm format
-def featurize_pairs(pairs_arr, pc):
-    def featurize_pair(pair):
-        p1, p2 = pair[:3], pair[3:]
-        return np.hstack((window(p1,(p2-p1)/np.linalg.norm(p2-p1),pc), window(p2,(p1-p2)/np.linalg.norm(p2-p1),pc), moment_arm(p1,pc), moment_arm(p2,pc)))
-
-    if len(pairs_arr.shape) == 1:
-        return featurize_pair(pairs_arr)
-
-    fp = []
-    for x in range(pairs_arr.shape[0]):
-        fp.append(featurize_pair(pairs_arr[x]))
-    return np.asarray(fp)
+    #here take the points in force_closure and pass them into a ferarri canny learner to choose the best one and return that instead of just all valid force closure grasps
+    return possible_grasps[np.where(force_closure == 1)]
 
 def num_possible_connections(n):
     total = 0
@@ -72,6 +64,8 @@ def contact_pairs(pc):
 
 def testing():
     x = np.arange(120).reshape(40,3)/500.
-    print determine_grasp(x)
+    f = determine_grasp(x)
+    print f
+    return f
 
 

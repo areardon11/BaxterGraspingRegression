@@ -114,15 +114,15 @@ def grow_forest(pd, pl, qd, ql, classifier=True, trees=10):
     return rf
 
 #assumes a classifier neural net
-def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hid=200, nin=452, nout=2):
+def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hid=200, nin=452, nout=2, batch=200):
 
     #featurizes the data in the proper format for the neural net
     def convert_to_feature_label(y_val):
-        return np.bincount(np.array([y_val]), minlength=2)
+        return np.bincount(np.array([y_val]), minlength=nout)
 
     pdf = np.column_stack((pd,np.ones(pd.shape[0])))
     qdf = np.column_stack((qd,np.ones(qd.shape[0])))
-    plf = np.zeros((pl.shape[0], 2))
+    plf = np.zeros((pl.shape[0], nout))
     for x in range(pl.shape[0]):
         plf[x] = convert_to_feature_label(pl[x])
 
@@ -130,7 +130,7 @@ def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hi
     neural_net = neural_net_model.Neural_Network(n_in=nin, n_hidden=n_hid, n_out=nout)
     if use_weights == None:
         print "Growing Neural Net!"
-        neural_net.train(pdf, plf, neural_net.crossEntopyError, neural_net.crossEntropyPrime)
+        neural_net.train(pdf, plf, neural_net.crossEntropyError, neural_net.crossEntropyPrime, batch_size=batch)
     else:
         neural_net.load_weights(arg_list=use_weights)
 
@@ -140,6 +140,14 @@ def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hi
     print "Test accuracy = ", 1-error_rate
     return neural_net
 
+def predict_neural_net(qd, use_weights, n_hid=200, nin=452, nout=2, neural_net_model=nna):
+    #preprocess data
+    qdf = np.column_stack((qd,np.ones(qd.shape[0])))
+
+    #prepare neural net and load weights
+    neural_net = neural_net_model.Neural_Network(n_in=nin, n_hidden=n_hid, n_out=nout)
+    neural_net.load_weights(arg_list=use_weights)
+    return neural_net.predict(qdf)
 
 def add_flipped_windows(data, labels):
     """
@@ -197,6 +205,6 @@ if __name__ == "__main__":
     #Examples on how to create a new model
     #svm = create_svm(pd, pl, qd, ql)
     #dt = grow_tree(pd, pl, qd, ql)
-    rf = grow_forest(pd, pl, qd, ql)
-    # nn = grow_neural_net(pd, pl, qd, ql)
+    # rf = grow_forest(pd, pl, qd, ql)
+    nn = grow_neural_net(pd, pl, qd, ql, use_weights=["nn_weights/V1.npy", "nn_weights/W1.npy"])
          
