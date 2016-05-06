@@ -29,7 +29,6 @@ def load(n='00', force_closure=True, mounted=False):
     data = np.hstack((w1,w2,moments))
     return data, fc
 
-
 def split(data, labels):
     """
     Splits `data` and `labels` into a 
@@ -115,7 +114,7 @@ def grow_forest(pd, pl, qd, ql, classifier=True, trees=10):
     return rf
 
 #assumes a classifier neural net
-def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hid=200):
+def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hid=200, nin=452, nout=2):
 
     #featurizes the data in the proper format for the neural net
     def convert_to_feature_label(y_val):
@@ -128,7 +127,7 @@ def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hi
         plf[x] = convert_to_feature_label(pl[x])
 
     #prepares the neural net
-    neural_net = neural_net_model.Neural_Network(n_hidden=n_hid)
+    neural_net = neural_net_model.Neural_Network(n_in=nin, n_hidden=n_hid, n_out=nout)
     if use_weights == None:
         print "Growing Neural Net!"
         neural_net.train(pdf, plf, neural_net.crossEntopyError, neural_net.crossEntropyPrime)
@@ -142,7 +141,12 @@ def grow_neural_net(pd, pl, qd, ql, use_weights=None, neural_net_model=nna, n_hi
     return neural_net
 
 
-    
+def add_flipped_windows(data, labels):
+    """
+    Augments dataset with window1, window2, and their respective moment arms swapped
+    """
+    data_flipped = np.column_stack((data[:,225:450], data[:,:225], data[:,453:], data[:,450:453]))
+    return np.concatenate((data, data_flipped), axis=0), np.concatenate((labels, np.copy(labels)), axis=0)
 
 def add_noise(data, labels, num=3):
     """
@@ -164,24 +168,35 @@ if __name__ == "__main__":
 
     #Creates datasets to test on by sampling Jeff's data
     #Only run this when you want a fresh dataset
-
     # names = ["0" + str(i) for i in range(10)]
     # names += [str(i) for i in range(10,105)]
     # data, labels = sampler(names, 300000, force_closure=True, mounted=True)
     # X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.33)
     # np.savez('training', data=X_train, labels=y_train)
     # np.savez('test', data=X_test, labels=y_test)
+    # data, labels = sampler(names, 300000, force_closure=False, mounted=True)
+    # X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.33)
+    # np.savez('training_ferrari_canny', data=X_train, labels=y_train)
+    # np.savez('test_ferrari_canny', data=X_test, labels=y_test)
 
     #Loads the dataset
     data = np.load('training.npz')
     pd, pl = data['data'], data['labels']
     data = np.load('test.npz')
     qd, ql = data['data'], data['labels']
-    # pd, pl = add_noise(pd, pl, 3)
+
+    #adds flipped windows and noise
+    #WARNING: makes the dataset take up a ton of space!
+    # pd, pl = add_noise(pd, pl, 2)
+    # pd, pl = add_flipped_windows(pd, pl)
+
+    #substitutes magnitude of moment arm for the arm
+    pd = np.column_stack((pd[:,:450], np.linalg.norm(pd[:,450:453], axis=-1), np.linalg.norm(pd[:,453:], axis=-1)))
+    qd = np.column_stack((qd[:,:450], np.linalg.norm(qd[:,450:453], axis=-1), np.linalg.norm(qd[:,453:], axis=-1)))
 
     #Examples on how to create a new model
     #svm = create_svm(pd, pl, qd, ql)
     #dt = grow_tree(pd, pl, qd, ql)
-    #rf = grow_forest(pd, pl, qd, ql)
-    nn = grow_neural_net(pd, pl, qd, ql)
+    rf = grow_forest(pd, pl, qd, ql)
+    # nn = grow_neural_net(pd, pl, qd, ql)
          
