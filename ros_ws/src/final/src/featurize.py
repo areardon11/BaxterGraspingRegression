@@ -6,7 +6,7 @@ from IPython import embed
 def window(c, n, pc, w=.05, gs=15):
     """
     Generates the window, around contact `c`,
-    given point cloud `pc` and normal `n`
+    given point cloud `pc` and normal `n` (assumes normal is unit vector pointing toward other contact)
     `w` is in units of m
     `gs` is the grid size of the window
     """
@@ -21,25 +21,24 @@ def window(c, n, pc, w=.05, gs=15):
     
     # Create 3D to 2D mapping
     three_to_two = np.vstack((u,v))
-    delta = w / gs
+    delta = w / float(gs)
     grid = np.zeros((15,15)) + .2
     print("Delta is " + str(delta))
     for p in pc:
         
         # Project point onto plane
         p = np.array(p)
-        v = p - c
-        d = n.dot(v)
+        a = p - c
+        d = n.dot(a)
         if d < 0:
             sign = -1
-            d = -d
         else:
             sign = 1
         p_hat = p - d*n
         
         # Reject points outside our window of size w
         p_2d = three_to_two.dot(p_hat - c)
-        if abs(p_2d[0]) > w/2 or np.abs(p_2d[1]) > w/2:
+        if abs(p_2d[0]) > w/2. or np.abs(p_2d[1]) > w/2.:
             continue
         
         # Create projection window using minimum depths
