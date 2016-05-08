@@ -1,6 +1,10 @@
 import numpy as np 
 import tf
 from tf.transformations import *
+import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointCloud2
+from std_msgs import msg
+import rospy
 
 def dimg_to_pc(dimg, K, trans, rot):
 	pc = []
@@ -39,6 +43,20 @@ def merge_dimg_to_pcs(dimg1, dimg2, trans1, rot1, trans2, rot2):
 	pc2 = dimg_to_pc(dimg2, K2, trans2, rot2)
 	return np.array(pc1 + pc2)
 
+def rviz_pc_visualizer(pc):
+	rospy.init_node('pc_publisher', anonymous=True)
+    pcl_pub = rospy.Publisher("/custom_pc", PointCloud2, queue_size=10)
+
+	points = pc.tolist()
+	rate = rospy.Rate(1)
+    while not rospy.is_shutdown():
+        header = msg.Header()
+        header.stamp = rospy.Time.now()
+        header.frame_id = 'base' 
+        point_cloud = pc2.create_cloud_xyz32(header, points)
+        pcl_pub.publish(point_cloud)
+        rate.sleep()
+
 """The steps for collecting depth image and then converting to a merged
 point cloud in Baxter's base frame:
 
@@ -53,12 +71,12 @@ transX, rotX for the respective KinectX.
 a merged pointcloud in Baxter's base frame. The merged pointcloud
 will be an nX3 numpy array.
 
-4. (Optional) Develop a method to visualize/publish the pointcloud to double 
+4. (Optional) Visualize the pointcloud in RVIZ using rviz_pc_visualizer() to double 
 check correctness.
 
 5. Run the merged pointcloud through the bounding box by calling boxer() with 
 the desired arguments.
 
-6. (Optional) Visualize this new bounded pointcloud.
+6. (Optional) Visualize this new bounded pointcloud in RVIZ using rviz_pc_visualizer().
 
 7. Send this boxed pointcoud to sampler."""
