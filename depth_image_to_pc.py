@@ -5,6 +5,33 @@ import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 from std_msgs import msg
 import rospy
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+import matplotlib.pyplot as plt
+
+"""The steps for collecting depth image and then converting to a merged
+point cloud in Baxter's base frame:
+
+1. Collect an averaged depth image from each Kinect. Call these dimg1 and dimg2
+for Kinect1 and Kinect2 respectively. (This should be done in a separate method).
+
+2. Compute the tfs for each Kinect to the base, i.e. FROM KinectX TO base -->
+tf.lookupTransform('base', /KinectX_link, rospy.time(0)). Store these tfs as
+transX, rotX for the respective KinectX.
+
+3. Call merge_dimg_to_pcs(dimg1, dimg2, trans1, rot1, trans2, rot2) to get 
+a merged pointcloud in Baxter's base frame. The merged pointcloud
+will be an nX3 numpy array.
+
+4. (Optional) Visualize the pointcloud in RVIZ using rviz_pc_visualizer() to double 
+check correctness.
+
+5. Run the merged pointcloud through the bounding box by calling boxer() with 
+the desired arguments.
+
+6. (Optional) Visualize this new bounded pointcloud in RVIZ using rviz_pc_visualizer().
+
+7. Send this boxed pointcoud to sampler."""
 
 def dimg_to_pc(dimg, K, trans, rot):
 	pc = []
@@ -56,27 +83,3 @@ def rviz_pc_visualizer(pc):
         point_cloud = pc2.create_cloud_xyz32(header, points)
         pcl_pub.publish(point_cloud)
         rate.sleep()
-
-"""The steps for collecting depth image and then converting to a merged
-point cloud in Baxter's base frame:
-
-1. Collect an averaged depth image from each Kinect. Call these dimg1 and dimg2
-for Kinect1 and Kinect2 respectively. (This should be done in a separate method).
-
-2. Compute the tfs for each Kinect to the base, i.e. FROM KinectX TO base -->
-tf.lookupTransform('base', /KinectX_link, rospy.time(0)). Store these tfs as
-transX, rotX for the respective KinectX.
-
-3. Call merge_dimg_to_pcs(dimg1, dimg2, trans1, rot1, trans2, rot2) to get 
-a merged pointcloud in Baxter's base frame. The merged pointcloud
-will be an nX3 numpy array.
-
-4. (Optional) Visualize the pointcloud in RVIZ using rviz_pc_visualizer() to double 
-check correctness.
-
-5. Run the merged pointcloud through the bounding box by calling boxer() with 
-the desired arguments.
-
-6. (Optional) Visualize this new bounded pointcloud in RVIZ using rviz_pc_visualizer().
-
-7. Send this boxed pointcoud to sampler."""
