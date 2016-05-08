@@ -46,4 +46,6 @@ def tester():
 	4. (Optional) Develop a method to visualize/publish the pointcloud to double 
 	check correctness.
 
-	5. Send this pointcoud to featurizer.""""
+	5. Run the merged pointcloud through the bounding box.
+
+	6. Send this boxed pointcoud to featurizer.""""
