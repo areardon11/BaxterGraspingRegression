@@ -8,21 +8,29 @@ import model
 max_gripper_width = .0825
 min_gripping_width = .002 #.045 <- this is the actual value you want, but doesn't work for the test
 x_diff = .0127 #points can be within 1/2 an inch in the x dir of each other
-points_wanted = 7 #will only return one pair if <= 6
+points_wanted = 10 #will only return one pair if <= 6
 
 
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
 #returns points_wanted featurized grasps
 def determine_grasp(point_cloud):
+    #select possible grasps, featurize them, and then pass them into the force closure learner
     possible_grasps = contact_pairs(point_cloud)
     print "possible_grasps: \n", possible_grasps
     featurized_grasps = featurize(possible_grasps, point_cloud)
-    print "featurized_grasps shapes: \n", featurized_grasps.shape
+    print "featurized_grasps shape:", featurized_grasps.shape
     force_closure = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V1.npy", "neural_net_weights/W1.npy"])
-    print force_closure
+    print "force closure: \n", force_closure
 
-    #here take the points in force_closure and pass them into a ferarri canny learner to choose the best one and return that instead of just all valid force closure grasps
-    return possible_grasps[np.where(force_closure == 1)]
+    #filter possible_grasps and featurized_grasps by force_closure, then pass it into ferrari_canny learner
+    possible_grasps = possible_grasps[np.where(force_closure == 1)]
+    if possible_grasps.shape[0] == 0:
+        return determine_grasp(point_cloud)
+    featurized_grasps = featurized_grasps[np.where(force_closure == 1)]
+    ferrari_canny = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V_ferrari_canny2.npy", "neural_net_weights/W_ferrari_canny2.npy"], classifier=False)
+    print "ferrari_canny: \n", ferrari_canny
+
+    return possible_grasps[np.argmax(ferrari_canny)]
 
 def num_possible_connections(n):
     total = 0
@@ -62,10 +70,11 @@ def contact_pairs(pc):
     print "tried to generate the asked possible pairs and failed"
     return ret_points
 
+#None of the testing grasps end up being in force closure
 def testing():
     x = np.arange(120).reshape(40,3)/500.
     f = determine_grasp(x)
-    print f
+    print "The determined grasp: \n", f
     return f
 
 

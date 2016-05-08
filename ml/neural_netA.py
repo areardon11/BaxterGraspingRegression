@@ -69,8 +69,11 @@ class Neural_Network(object):
         #assumes X is a vector (one sample)
         if len(X.shape) > 1:
             self.yHat = self.forward(X)
-        
-            delta3 = np.multiply(-(y-self.yHat), self.actFuncPrimeOut(self.z3))
+            if self.yHat.shape[1] == 1:
+                self.yHat = self.yHat.reshape(self.yHat.shape[0])
+                delta3 = np.multiply(-(y-self.yHat), self.actFuncPrimeOut(self.z3).reshape(self.z3.shape[0])).reshape(y.shape[0], 1)
+            else:
+                delta3 = np.multiply(-(y-self.yHat), self.actFuncPrimeOut(self.z3))
             dJdW = np.dot(delta3.T, self.a2)
             
             delta2 = np.dot(delta3, self.W)[:,:-1]*self.actFuncPrimeHid(self.z2)
@@ -120,7 +123,7 @@ class Neural_Network(object):
         self.V = self.V - epsilon*dJdV
         self.W = self.W - epsilon*dJdW
 
-    def train(self, X, y, costFunc, costFuncPrime, epsilon=.01, convergence=.001, batch_size=1):
+    def train(self, X, y, costFunc, costFuncPrime, epsilon=.01, convergence=.0000001, batch_size=1, decrease_epsilon=False):
         total_training_errors = []
         classification_accuracies = []
         past_w = float('inf')*np.ones_like(self.W)
@@ -133,8 +136,13 @@ class Neural_Network(object):
             #perform statistics and bookkeeping every 1000 iterations
             if counter % stats_constant == 0 and counter != 0:
                 print "distance from convergence:", np.mean(change_vals)-convergence
+                print "   epsilon =", epsilon
                 np.save("V.npy", self.V)
                 np.save("W.npy", self.W)
+                if decrease_epsilon:
+                    new_ep = epsilon-epsilon/(np.sqrt(counter))
+                    if new_ep > 0:
+                        epsilon = new_ep
 
             #keep track of how the weights are changing so we know when to terminate the training
             change = np.linalg.norm(self.W-past_w) + np.linalg.norm(self.V-past_v)
