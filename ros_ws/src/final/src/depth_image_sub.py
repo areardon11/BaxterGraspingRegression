@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 class dimg_collecter:
 
 	def __init__(self, kinect, num_to_collect):
-		# node_name = kinect + '_depth'
-		# rospy.init_node(node_name,anonymous=True)
+		node_name = kinect + '_depth'
+		rospy.init_node(node_name,anonymous=True)
 		self.kinect = kinect
 		self.num_to_collect = num_to_collect
 		self.img_history = []
@@ -47,7 +47,7 @@ class dimg_collecter:
 		cv2.destroyAllWindows()
 
 def main():
-	rospy.init_node('dimg_collecter', anonymous=True)
+	# rospy.init_node('dimg_collecter', anonymous=True)
 	collector = dimg_collecter('kinect1', 10)
 	raw_input('Press <Enter> to collect an averaged depth image for Kinect1:')
 	collector.collect_avg_dimg()
