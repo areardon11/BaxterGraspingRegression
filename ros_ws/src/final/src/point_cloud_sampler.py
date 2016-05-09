@@ -1,15 +1,17 @@
 import numpy as np
 from featurize import featurize
 import sys
+import transformations
 # sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
 sys.path.append("/home/group7/EE106BFinal/ml")
 import model
+from IPython import embed
 
 #set constants
 max_gripper_width = .0825
 min_gripping_width = .045
 x_diff = .0127 #points can be within 1/2 an inch in the x dir of each other
-points_wanted = 10 #will only return one pair if <= 6
+points_wanted = 30 #will only return one pair if <= 6
 
 
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
@@ -36,19 +38,23 @@ def determine_grasp(point_cloud):
 
     #take the best ferrari_canny, and return the center point and orientation
     grasp_points = possible_grasps[np.argmax(ferrari_canny)]
+    print "grasp_points: \n", grasp_points
 
     return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
 
-def contacts_to_baxter_hand_pose(contact1, contact2):
+def contacts_to_baxter_hand_pose(c1, c2):
     # compute gripper center and axis
     center = 0.5 * (c1 + c2)
     y_axis = c2 - c1
+    print y_axis
     y_axis = y_axis / np.linalg.norm(y_axis)
+    print y_axis
     x = np.array([y_axis[1], -y_axis[0], 0]) # the x axis will always be in the table plane for now
     x = x / np.linalg.norm(x)
-    z = np.cross(y_axis, x)
+    z = np.cross(x, y_axis)
     if z[2] < 0:
-        return contacts_to_baxter_hand_pose(contact2, contact1)
+        x = -x
+        z = np.cross(x, y_axis)
 
     # convert to hand pose
     R_obj_gripper = np.array([x, y_axis, z]).T
@@ -101,11 +107,9 @@ def contact_pairs(pc):
 
 #None of the testing grasps end up being in force closure
 def testing():
-    pc = np.asarray(np.load('kinect2_pc2_read'))[:,:3]
+    pc = np.asarray(np.load('boxed'))[:,:3]
     f = determine_grasp(pc)
     print "The determined grasp: \n", f
     return f
-
-testing()
 
 
