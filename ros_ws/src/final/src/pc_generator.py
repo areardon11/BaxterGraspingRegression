@@ -15,16 +15,16 @@ points = None
 
 class pc_gener(object):
 	def __init__(self, delta=0.15):
-		self.listener = tf.TransformListener()
+		self.listener1 = tf.TransformListener()
 		t = None
 		while not t:
 			try:
-				t, r = self.listener.lookupTransform('/base', '/ar_marker_1', rospy.Time(0))
+				t, r = self.listener1.lookupTransform('/base', '/ar_marker_1', rospy.Time(0))
 			except:
 				continue
 		x_b = t[0] - delta, t[0] + delta
 		y_b = t[1] - delta, t[1] + delta
-		z_b= t[2] + .02, t[2] + 3*delta
+		z_b= t[2] + .06, t[2] + 3*delta
 		self.bounds = [x_b, y_b, z_b]
 		self.pc = None
 		self.points = None
@@ -62,19 +62,20 @@ class pc_gener(object):
 		done = False
 		while not done:
 			try:
-				t, r = self.listener.lookupTransform('/base', klink , rospy.Time(0))
+				t, r = self.listener1.lookupTransform('/base', klink , rospy.Time(0))
 				done = True
 			except:
 				continue
 		return self.transform_pc(self.points[:,:3], t,r)
 
 	def gen_new_pc(self):
-		print('Starting')
+		print('Starting PC generation...')
 		pc1 = self.get_one_pc('kinect1')
 		print('Done PC1')
 		pc2 = self.get_one_pc('kinect2')
 		print('Done PC2')
 		self.pc = self.box_pc(np.vstack((pc1,pc2)))
+		print('Done generating new PC.')
 
 	def get_pc(self):
 		return self.pc
