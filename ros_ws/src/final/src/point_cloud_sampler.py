@@ -6,7 +6,7 @@ import model
 
 #set constants
 max_gripper_width = .0825
-min_gripping_width = .002 #.045 <- this is the actual value you want, but doesn't work for the test
+min_gripping_width = .045
 x_diff = .0127 #points can be within 1/2 an inch in the x dir of each other
 points_wanted = 10 #will only return one pair if <= 6
 
@@ -14,6 +14,9 @@ points_wanted = 10 #will only return one pair if <= 6
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
 #returns points_wanted featurized grasps
 def determine_grasp(point_cloud):
+    #filter out nan values if there still are any
+    point_cloud = point_cloud[~np.isnan(point_cloud).any(axis=1)]
+
     #select possible grasps, featurize them, and then pass them into the force closure learner
     possible_grasps = contact_pairs(point_cloud)
     print "possible_grasps: \n", possible_grasps
@@ -72,9 +75,11 @@ def contact_pairs(pc):
 
 #None of the testing grasps end up being in force closure
 def testing():
-    x = np.arange(120).reshape(40,3)/500.
-    f = determine_grasp(x)
+    pc = np.asarray(np.load('kinect2_pc2_read'))[:,:3]
+    f = determine_grasp(pc)
     print "The determined grasp: \n", f
     return f
+
+testing()
 
 
