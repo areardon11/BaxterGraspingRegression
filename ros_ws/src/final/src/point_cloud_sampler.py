@@ -1,7 +1,8 @@
 import numpy as np
 from featurize import featurize
 import sys
-sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+# sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+sys.path.append("/home/group7/EE106BFinal/ml")
 import model
 
 #set constants
@@ -33,7 +34,31 @@ def determine_grasp(point_cloud):
     ferrari_canny = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V_ferrari_canny2.npy", "neural_net_weights/W_ferrari_canny2.npy"], classifier=False)
     print "ferrari_canny: \n", ferrari_canny
 
-    return possible_grasps[np.argmax(ferrari_canny)]
+    #take the best ferrari_canny, and return the center point and orientation
+    grasp_points = possible_grasps[np.argmax(ferrari_canny)]
+
+    return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
+
+def contacts_to_baxter_hand_pose(contact1, contact2):
+    # compute gripper center and axis
+    center = 0.5 * (c1 + c2)
+    y_axis = c2 - c1
+    y_axis = y_axis / np.linalg.norm(y_axis)
+    x = np.array([y_axis[1], -y_axis[0], 0]) # the x axis will always be in the table plane for now
+    x = x / np.linalg.norm(x)
+    z = np.cross(y_axis, x)
+    if z[2] < 0:
+        return contacts_to_baxter_hand_pose(contact2, contact1)
+
+    # convert to hand pose
+    R_obj_gripper = np.array([x, y_axis, z]).T
+    t_obj_gripper = center
+    T_obj_gripper = np.eye(4)
+    T_obj_gripper[:3,:3] = R_obj_gripper
+    T_obj_gripper[:3,3] = t_obj_gripper
+    q_obj_gripper = transformations.quaternion_from_matrix(T_obj_gripper)
+
+    return t_obj_gripper, q_obj_gripper 
 
 def num_possible_connections(n):
     total = 0
@@ -57,7 +82,8 @@ def contact_pairs(pc):
         #filter points by distance
         p1, p2 = pc[i], pc[j]
         d = np.linalg.norm(p1-p2)
-        if d > max_gripper_width or d < min_gripping_width:
+        #if d > max_gripper_width or d < min_gripping_width:
+        if d < min_gripping_width:
             continue
         #filter by x value
         #TODO: remove this to generalize
