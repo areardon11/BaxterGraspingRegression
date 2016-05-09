@@ -1,5 +1,6 @@
 import numpy as np
 from featurize import featurize
+import visualization
 import sys
 import transformations
 # sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
@@ -11,18 +12,27 @@ from IPython import embed
 max_gripper_width = .0825
 min_gripping_width = .045
 x_diff = .0127 #points can be within 1/2 an inch in the x dir of each other
-points_wanted = 30 #will only return one pair if <= 6
+z_diff = .0127 #points can be within 1/2 an inch in the z dir of each other
+points_wanted = 50 #will only return one pair if <= 6
 
 
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
-#returns points_wanted featurized grasps
-def determine_grasp(point_cloud):
+#assumes that the point cloud has already been boxed
+#returns the translation and quaternion for the baxter hand pose
+def determine_grasp(point_cloud, display=False):
     #filter out nan values if there still are any
     point_cloud = point_cloud[~np.isnan(point_cloud).any(axis=1)]
+    #determine the best randomly sampled grasp points using the learner
+    grasp_points = determine_grasp_points(point_cloud)
+    print "grasp_points: \n", grasp_points
+    if display:
+        visualization.view_contacts(point_cloud, grasp_points.reshape(2,3))
+    #take the best grasp points and return the center point and orientation
+    return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
 
+def determine_grasp_points(point_cloud):
     #select possible grasps, featurize them, and then pass them into the force closure learner
     possible_grasps = contact_pairs(point_cloud)
-    print "possible_grasps: \n", possible_grasps
     featurized_grasps = featurize(possible_grasps, point_cloud)
     print "featurized_grasps shape:", featurized_grasps.shape
     force_closure = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V1.npy", "neural_net_weights/W1.npy"])
@@ -31,16 +41,13 @@ def determine_grasp(point_cloud):
     #filter possible_grasps and featurized_grasps by force_closure, then pass it into ferrari_canny learner
     possible_grasps = possible_grasps[np.where(force_closure == 1)]
     if possible_grasps.shape[0] == 0:
-        return determine_grasp(point_cloud)
+        return determine_grasp_points(point_cloud)
     featurized_grasps = featurized_grasps[np.where(force_closure == 1)]
     ferrari_canny = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V_ferrari_canny2.npy", "neural_net_weights/W_ferrari_canny2.npy"], classifier=False)
     print "ferrari_canny: \n", ferrari_canny
 
-    #take the best ferrari_canny, and return the center point and orientation
-    grasp_points = possible_grasps[np.argmax(ferrari_canny)]
-    print "grasp_points: \n", grasp_points
-
-    return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
+    #return the best ferrari canny
+    return possible_grasps[np.argmax(ferrari_canny)]
 
 def contacts_to_baxter_hand_pose(c1, c2):
     # compute gripper center and axis
@@ -91,9 +98,11 @@ def contact_pairs(pc):
         #if d > max_gripper_width or d < min_gripping_width:
         if d < min_gripping_width:
             continue
-        #filter by x value
+        #filter by x and z value
         #TODO: remove this to generalize
         if abs(p1[0]-p2[0]) > x_diff:
+            continue
+        if abs(p1[2]-p2[2]) > z_diff:
             continue
         points = np.hstack((p1,p2))
         if ret_points is None:
@@ -105,11 +114,9 @@ def contact_pairs(pc):
     print "tried to generate the asked possible pairs and failed"
     return ret_points
 
-#None of the testing grasps end up being in force closure
-def testing():
-    pc = np.asarray(np.load('boxed'))[:,:3]
-    f = determine_grasp(pc)
-    print "The determined grasp: \n", f
-    return f
-
+# def testing():
+#     pc = np.asarray(np.load('boxed'))[:,:3]
+#     f = determine_grasp(pc, display=True)
+#     print "The determined grasp: \n", f
+#     return f
 
