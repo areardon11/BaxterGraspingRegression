@@ -1,19 +1,25 @@
 import numpy as np
 from featurize import featurize
 import sys
-sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+import transformations
+# sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+sys.path.append("/home/group7/EE106BFinal/ml")
 import model
+from IPython import embed
 
 #set constants
 max_gripper_width = .0825
-min_gripping_width = .002 #.045 <- this is the actual value you want, but doesn't work for the test
+min_gripping_width = .045
 x_diff = .0127 #points can be within 1/2 an inch in the x dir of each other
-points_wanted = 10 #will only return one pair if <= 6
+points_wanted = 30 #will only return one pair if <= 6
 
 
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
 #returns points_wanted featurized grasps
 def determine_grasp(point_cloud):
+    #filter out nan values if there still are any
+    point_cloud = point_cloud[~np.isnan(point_cloud).any(axis=1)]
+
     #select possible grasps, featurize them, and then pass them into the force closure learner
     possible_grasps = contact_pairs(point_cloud)
     print "possible_grasps: \n", possible_grasps
@@ -30,7 +36,35 @@ def determine_grasp(point_cloud):
     ferrari_canny = model.predict_neural_net(featurized_grasps, ["neural_net_weights/V_ferrari_canny2.npy", "neural_net_weights/W_ferrari_canny2.npy"], classifier=False)
     print "ferrari_canny: \n", ferrari_canny
 
-    return possible_grasps[np.argmax(ferrari_canny)]
+    #take the best ferrari_canny, and return the center point and orientation
+    grasp_points = possible_grasps[np.argmax(ferrari_canny)]
+    print "grasp_points: \n", grasp_points
+
+    return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
+
+def contacts_to_baxter_hand_pose(c1, c2):
+    # compute gripper center and axis
+    center = 0.5 * (c1 + c2)
+    y_axis = c2 - c1
+    print y_axis
+    y_axis = y_axis / np.linalg.norm(y_axis)
+    print y_axis
+    x = np.array([y_axis[1], -y_axis[0], 0]) # the x axis will always be in the table plane for now
+    x = x / np.linalg.norm(x)
+    z = np.cross(x, y_axis)
+    if z[2] < 0:
+        x = -x
+        z = np.cross(x, y_axis)
+
+    # convert to hand pose
+    R_obj_gripper = np.array([x, y_axis, z]).T
+    t_obj_gripper = center
+    T_obj_gripper = np.eye(4)
+    T_obj_gripper[:3,:3] = R_obj_gripper
+    T_obj_gripper[:3,3] = t_obj_gripper
+    q_obj_gripper = transformations.quaternion_from_matrix(T_obj_gripper)
+
+    return t_obj_gripper, q_obj_gripper 
 
 def num_possible_connections(n):
     total = 0
@@ -54,7 +88,8 @@ def contact_pairs(pc):
         #filter points by distance
         p1, p2 = pc[i], pc[j]
         d = np.linalg.norm(p1-p2)
-        if d > max_gripper_width or d < min_gripping_width:
+        #if d > max_gripper_width or d < min_gripping_width:
+        if d < min_gripping_width:
             continue
         #filter by x value
         #TODO: remove this to generalize
@@ -72,8 +107,8 @@ def contact_pairs(pc):
 
 #None of the testing grasps end up being in force closure
 def testing():
-    x = np.arange(120).reshape(40,3)/500.
-    f = determine_grasp(x)
+    pc = np.asarray(np.load('boxed'))[:,:3]
+    f = determine_grasp(pc)
     print "The determined grasp: \n", f
     return f
 

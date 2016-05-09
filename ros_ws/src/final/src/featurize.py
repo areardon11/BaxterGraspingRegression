@@ -65,7 +65,7 @@ def window(c, n, pc, w=.05, gs=15):
             continue
         
         # Create projection window using minimum depths
-        coord = np.floor(p_2d / delta).astype(int)
+        coord = (p_2d / delta).astype(int)
         coord = (coord[0] + 7, -coord[1] + 7)
         residual = la.norm(p_hat - p)
         if residual < abs(grid[coord]):
