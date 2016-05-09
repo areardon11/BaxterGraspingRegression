@@ -12,16 +12,16 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 import matplotlib.pyplot as plt
 
-class dimg_collecter:
+class dimg_collector:
 
 	def __init__(self, kinect, num_to_collect):
-		node_name = kinect + '_depth'
-		rospy.init_node(node_name,anonymous=True)
+		#node_name = kinect + '_depth'
+		#rospy.init_node(node_name,anonymous=True)
 		self.kinect = kinect
 		self.num_to_collect = num_to_collect
 		self.img_history = []
 		self.bridge = CvBridge()
-		topic = '/' + kinect + '/depth_registered/image_raw'
+		self.topic = '/' + kinect + '/depth_registered/image_raw'
 		self.avg_dimg = None
 
 	def collect_dimg(self, img):
@@ -48,7 +48,7 @@ class dimg_collecter:
 
 def main():
 	# rospy.init_node('dimg_collecter', anonymous=True)
-	collector = dimg_collecter('kinect1', 10)
+	collector = dimg_collector('kinect1', 10)
 	raw_input('Press <Enter> to collect an averaged depth image for Kinect1:')
 	collector.collect_avg_dimg()
 	collector.show_avg_img()
