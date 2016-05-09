@@ -3,6 +3,7 @@ from featurize import featurize
 import visualization
 import sys
 import transformations
+import matplotlib.pyplot as plt
 # sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
 sys.path.append("/home/group7/EE106BFinal/ml")
 import model
@@ -26,6 +27,11 @@ def determine_grasp(point_cloud, display=False):
     grasp_points = determine_grasp_points(point_cloud)
     print "grasp_points: \n", grasp_points
     if display:
+        featurized = featurize(grasp_points, point_cloud)
+        plt.imshow(featurized[:225].reshape(15,15).T)
+        plt.figure()
+        plt.imshow(featurized[225:450].reshape(15,15).T)
+        plt.show()
         visualization.view_contacts(point_cloud, grasp_points.reshape(2,3))
     #take the best grasp points and return the center point and orientation
     return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
@@ -114,9 +120,11 @@ def contact_pairs(pc):
     print "tried to generate the asked possible pairs and failed"
     return ret_points
 
-# def testing():
+# def demo():
 #     pc = np.asarray(np.load('boxed'))[:,:3]
 #     f = determine_grasp(pc, display=True)
 #     print "The determined grasp: \n", f
 #     return f
+
+# demo()
 
