@@ -24,7 +24,7 @@ class pc_gener(object):
 				continue
 		x_b = t[0] - delta, t[0] + delta
 		y_b = t[1] - delta, t[1] + delta
-		z_b= t[2] + .06, t[2] + 3*delta
+		z_b= t[2] + .04, t[2] + 3*delta
 		self.bounds = [x_b, y_b, z_b]
 		self.pc = None
 		self.points = None

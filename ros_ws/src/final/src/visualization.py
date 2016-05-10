@@ -5,11 +5,22 @@ from vispy.scene import visuals
 import pickle
 import sys
 from IPython import embed
-
+import vispy.io as io
+from sensor_msgs.msg import Image
+import cv2
+import cv_bridge
+import rospy
 # pc = np.asarray(np.load('boxed'))[:,:3]
 # pos = pc[~np.isnan(pc).any(axis=1)]
 # print pc.shape
 # print pos.shape
+
+def send_image(path):
+    img = cv2.imread(path)
+    msg = cv_bridge.CvBridge().cv2_to_imgmsg(img, encoding='bgr8')
+    pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
+    pub.publish(msg)
+    rospy.sleep(1)
 
 def view_pc(pc):
     #
@@ -25,10 +36,13 @@ def view_pc(pc):
     view.camera = 'turntable'
 
     axis = visuals.XYZAxis(parent=view.scene)
-
+    img = canvas.render()
+    io.write_png('images/pc.png', img)
+    send_image('images/pc.png')
     if sys.flags.interactive != 1:
         vispy.app.run()
-
+    x = raw_input('Use this PC? (y/n):')
+    return x
 
 def view_contacts(pc, contacts):
     canvas = vispy.scene.SceneCanvas(keys='interactive', show=True)
@@ -39,13 +53,15 @@ def view_contacts(pc, contacts):
     view.add(scatter)
 
     scatter2 = visuals.Markers()
-    scatter2.set_data(contacts, edge_color=None, face_color=(0, 1, 0, 1), size=20)
+    scatter2.set_data(contacts, edge_color=None, face_color=(1, 0, 0, 1), size=20)
     view.add(scatter2)
 
     view.camera = 'turntable'
 
     axis = visuals.XYZAxis(parent=view.scene)
-
+    img = canvas.render()
+    io.write_png('images/pc_contacts.png', img)
+    send_image('images/pc_contacts.png')
     if sys.flags.interactive != 1:
         vispy.app.run()
 

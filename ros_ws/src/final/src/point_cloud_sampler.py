@@ -17,22 +17,32 @@ z_diff = .0127 #points can be within 1/2 an inch in the z dir of each other
 points_wanted = 50 #will only return one pair if <= 6
 
 
+
 #takes in argument of a point cloud expressed in np array of shape (n x 3)
 #assumes that the point cloud has already been boxed
 #returns the translation and quaternion for the baxter hand pose
 def determine_grasp(point_cloud, display=False):
     #filter out nan values if there still are any
     point_cloud = point_cloud[~np.isnan(point_cloud).any(axis=1)]
+    if display:
+        answer = visualization.view_pc(point_cloud)
+        if answer == 'n':
+            return None, None
+        else:
+            print 'Sorting through possible grasps...'
     #determine the best randomly sampled grasp points using the learner
     grasp_points = determine_grasp_points(point_cloud)
     print "grasp_points: \n", grasp_points
     if display:
         featurized = featurize(grasp_points, point_cloud)
-        plt.imshow(featurized[:225].reshape(15,15).T)
-        plt.figure()
-        plt.imshow(featurized[225:450].reshape(15,15).T)
+        f = plt.figure()
+        ax = f.add_subplot(2,1,1)
+        ax2 = f.add_subplot(2,1,2)
+        ax.imshow(featurized[:225].reshape(15,15).T)
+        ax2.imshow(featurized[225:450].reshape(15,15).T)
         plt.show()
         visualization.view_contacts(point_cloud, grasp_points.reshape(2,3))
+        print('Done Visualizing')
     #take the best grasp points and return the center point and orientation
     return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
 
@@ -87,6 +97,8 @@ def num_possible_connections(n):
 
 #finds valid pairs of contact points and returns featurized versions
 def contact_pairs(pc):
+    x_obj_end = np.mean(np.sort(pc[:,0])[:5]) + .0835
+    pc = pc[np.where(pc[:,0] < x_obj_end)]
     tried_pairs = set()
     ret_points = None
     npc = num_possible_connections(pc.shape[0])
@@ -106,6 +118,8 @@ def contact_pairs(pc):
             continue
         #filter by x and z value
         #TODO: remove this to generalize
+        # if p1[0] > x_obj_end or p2[0] > x_obj_end:
+        #     continue
         if abs(p1[0]-p2[0]) > x_diff:
             continue
         if abs(p1[2]-p2[2]) > z_diff:

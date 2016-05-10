@@ -19,7 +19,7 @@ from moveit_msgs.msg import *
 
 BASE_FRAME = 'base'
 HEIGHT_OFFSET = np.array([0.0, 0.0, 0.3])
-PREGRASP_OFFSET = np.array([-0.1, 0.0, 0.0])
+PREGRASP_OFFSET = np.array([-0.15, 0.0, 0.0])
 CAM_GRIP_OFFSET = np.array([-0.0762,0.0,0.0])
 
 def lookup_transform(name):
@@ -128,14 +128,18 @@ def visualize_pc(pc):
 def test():
     pc_gen.gen_new_pc()
     pc = pc_gen.get_pc()
-    t, r = determine_grasp(pc)
+    t, r = determine_grasp(pc, display=True)
+    if t is None or r is None:
+        return
     # t = t + CAM_GRIP_OFFSET
-    t0,r0 = lookup_transform('left_hand')
-    execute_grasp(t,r0)
-    goto(start_t, start_r)
+    else:
+        t0,r0 = lookup_transform('left_hand')
+        t = t + np.array([0.0,-0.017,0.0])
+        execute_grasp(t,r0)
+        goto(default_t, default_r)
 
 if __name__ == '__main__':
-    print('Here0')
+    print('Done importing.')
     rospy.init_node('master', anonymous=True)
     moveit_commander.roscpp_initialize(sys.argv)
     robot = moveit_commander.RobotCommander()
@@ -146,7 +150,6 @@ if __name__ == '__main__':
     left_planner.set_planning_time(10)
     left_gripper = baxter_gripper.Gripper('left')
     listener = tf.TransformListener()
-    print('Here1')
     grasp()
     release()
     start_t, start_r = lookup_transform('left_hand')
