@@ -1,15 +1,16 @@
 import numpy as np
 import vispy.scene
 from vispy.scene import visuals
+import vispy.io as io
 # from point_cloud_sampler import determine_grasp_points
 import pickle
 import sys
 from IPython import embed
 import vispy.io as io
-from sensor_msgs.msg import Image
-import cv2
-import cv_bridge
-import rospy
+# from sensor_msgs.msg import Image
+# import cv2
+# import cv_bridge
+# import rospy
 # pc = np.asarray(np.load('boxed'))[:,:3]
 # pos = pc[~np.isnan(pc).any(axis=1)]
 # print pc.shape
@@ -36,9 +37,11 @@ def view_pc(pc):
     view.camera = 'turntable'
 
     axis = visuals.XYZAxis(parent=view.scene)
+
     img = canvas.render()
     io.write_png('images/pc.png', img)
-    send_image('images/pc.png')
+    #send_image('images/pc.png')
+
     if sys.flags.interactive != 1:
         vispy.app.run()
     x = raw_input('Use this PC? (y/n):')
@@ -59,9 +62,11 @@ def view_contacts(pc, contacts):
     view.camera = 'turntable'
 
     axis = visuals.XYZAxis(parent=view.scene)
+
     img = canvas.render()
     io.write_png('images/pc_contacts.png', img)
-    send_image('images/pc_contacts.png')
+    # send_image('images/pc_contacts.png')
+
     if sys.flags.interactive != 1:
         vispy.app.run()
 

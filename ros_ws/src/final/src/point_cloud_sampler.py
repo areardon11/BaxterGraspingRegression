@@ -4,8 +4,8 @@ import visualization
 import sys
 import transformations
 import matplotlib.pyplot as plt
-# sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
-sys.path.append("/home/group7/EE106BFinal/ml")
+sys.path.append("/Users/andrewreardon/Classes/ee106b/EE106BFinal/ml") #update this to say the correct path for model.py
+# sys.path.append("/home/group7/EE106BFinal/ml")
 import model
 from IPython import embed
 
@@ -24,12 +24,12 @@ points_wanted = 50 #will only return one pair if <= 6
 def determine_grasp(point_cloud, display=False):
     #filter out nan values if there still are any
     point_cloud = point_cloud[~np.isnan(point_cloud).any(axis=1)]
-    if display:
-        answer = visualization.view_pc(point_cloud)
-        if answer == 'n':
-            return None, None
-        else:
-            print 'Sorting through possible grasps...'
+    # if display:
+    #     answer = visualization.view_pc(point_cloud)
+    #     if answer == 'n':
+    #         return None, None
+    #     else:
+    #         print 'Sorting through possible grasps...'
     #determine the best randomly sampled grasp points using the learner
     grasp_points = determine_grasp_points(point_cloud)
     print "grasp_points: \n", grasp_points
@@ -44,7 +44,8 @@ def determine_grasp(point_cloud, display=False):
         visualization.view_contacts(point_cloud, grasp_points.reshape(2,3))
         print('Done Visualizing')
     #take the best grasp points and return the center point and orientation
-    return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
+    print "done"
+    # return contacts_to_baxter_hand_pose(grasp_points[:3], grasp_points[3:])
 
 def determine_grasp_points(point_cloud):
     #select possible grasps, featurize them, and then pass them into the force closure learner
@@ -134,11 +135,9 @@ def contact_pairs(pc):
     print "tried to generate the asked possible pairs and failed"
     return ret_points
 
-# def demo():
-#     pc = np.asarray(np.load('boxed'))[:,:3]
-#     f = determine_grasp(pc, display=True)
-#     print "The determined grasp: \n", f
-#     return f
+def demo():
+    pc = np.asarray(np.load('boxed'))[:,:3]
+    determine_grasp(pc, display=True)
 
-# demo()
+demo()
 
