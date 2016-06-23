@@ -38,6 +38,7 @@ if __name__ == '__main__':
 
     process = launch.launch(node)
     while True:
+        print("ahhhhh")
         try:
             t,r = listener.lookupTransform('ar_marker_1', 'kinect1_link', rospy.Time(0))
             if t is not None and r is not None:
